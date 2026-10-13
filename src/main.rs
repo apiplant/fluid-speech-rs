@@ -43,9 +43,9 @@ struct Args {
     #[arg(long)]
     vad_threshold: Option<f32>,
 
-    /// --mic: drop one- or two-word utterances below this confidence (noise often decodes as "Yeah." / "Okay.");
-    /// 0 keeps everything. RUST_LOG=fluid_speech=debug shows what gets dropped
-    #[arg(long, default_value_t = 0.9)]
+    /// --mic: drop one- or two-word utterances below this confidence. Off (0) by default: this model decodes noise
+    /// to nothing, while short real phrases often score 0.4-0.9. RUST_LOG=fluid_speech=debug shows what gets dropped
+    #[arg(long, default_value_t = 0.0)]
     min_confidence: f32,
 
     /// Model directory (model.safetensors, config.json, vocab.json). Default: ./model, ../model, next to the

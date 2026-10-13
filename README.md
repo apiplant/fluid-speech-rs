@@ -77,7 +77,8 @@ The speech threshold is 4× a running noise-floor estimate, or `--vad-threshold`
 
 - **While you speak**, the utterance is re-transcribed about every half second and shown dimmed on stderr.
 - **After a pause** of `--silence-ms` (700 ms by default), the final text goes to stdout: plain text, one JSON line per utterance (`--format json`, word times from the session start), or SRT cues.
-- **Noise filtering:** one- or two-word utterances below `--min-confidence` (0.9) are dropped, because knocks and breaths tend to decode as "Yeah.". Confidence is the geometric mean of the tokens' softmax probabilities.
+- **Noise filtering:** utterances that decode to nothing, or have under 0.25 s of voiced audio, are dropped. `--min-confidence X` also drops one- or two-word utterances below X (confidence is the geometric mean of the tokens' softmax probabilities).
+  - It is off by default. On synthetic noise (white noise, clicks, hum, breath, knocks, typing) this model outputs nothing at all, while short real phrases often score 0.4–0.9 (80% of 1–2-word LibriSpeech snippets are below 0.9).
 - **Ctrl-C** flushes the utterance in progress and exits.
 
 On Linux the microphone is opened through PulseAudio's protocol, which PipeWire also serves, so `--mic-device` picks
@@ -116,7 +117,7 @@ Instead of a saved hotkey, you can:
 
 **Behaviour**
 
-- Recordings with under 0.25 s of voiced audio are discarded, as are decodes that come out as one or two low-confidence words.
+- Recordings with under 0.25 s of voiced audio, or that decode to nothing, are discarded. `--min-confidence` can also drop short low-confidence decodes; it is off by default for the reason above.
 - Other options: `--mic-device`, `--quiet` (no notifications), `--no-space` (no trailing space), `--max-secs 300`, `--fast`.
 
 Example systemd user unit (`~/.config/systemd/user/fluid-dictate.service`):

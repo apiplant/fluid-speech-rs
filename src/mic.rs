@@ -21,7 +21,7 @@ pub struct MicOptions {
     pub max_secs: f32,
     pub json: bool,
     pub srt: bool,
-    /// Utterances of one or two words below this confidence are dropped (noise tends to decode as "Yeah.")
+    /// Utterances of one or two words below this confidence are dropped (0 disables the check)
     pub min_confidence: f32,
 }
 

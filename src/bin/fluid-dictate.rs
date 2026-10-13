@@ -83,6 +83,11 @@ struct RunArgs {
     #[arg(long)]
     quiet: bool,
 
+    /// Drop recordings that decode to one or two words below this confidence (0 = keep everything that decodes).
+    /// Off by default: this model decodes noise to nothing, while short real phrases often score 0.4-0.9
+    #[arg(long, default_value_t = 0.0)]
+    min_confidence: f32,
+
     /// Stop recording automatically after this many seconds
     #[arg(long, default_value_t = 300.0)]
     max_secs: f32,
@@ -297,7 +302,7 @@ impl Daemon {
         let t = Instant::now();
         let audio16 = audio::resample(samples, rate)?;
         let words = self.engine.transcribe(&audio16)?.words;
-        if !mic::plausible(&words, 0.9) {
+        if !mic::plausible(&words, self.args.min_confidence) {
             eprintln!("dropped {:?} (confidence {:.2})", text::join(&words), text::confidence(&words));
             self.notifier.show("No speech heard", "", 1500);
             return Ok(());
