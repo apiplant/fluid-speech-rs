@@ -1,0 +1,9 @@
+/target
+/.venv
+/data
+/hf_coreml
+/hf_onnx
+/model
+__pycache__/
+/samples/jfk_*s.wav
+/samples/long.*

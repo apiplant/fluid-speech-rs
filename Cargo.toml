@@ -1,0 +1,73 @@
+[package]
+name = "fluid-speech"
+version = "0.1.0"
+edition = "2021"
+description = "Fluid Speech Mini (Parakeet TDT) speech-to-text and dictation on candle, CPU or CUDA"
+license = "MIT OR Apache-2.0"
+keywords = ["speech-to-text", "asr", "parakeet", "dictation", "candle"]
+categories = ["multimedia::audio", "science", "command-line-utilities"]
+
+[lib]
+name = "fluid_speech"
+
+[features]
+default = ["dictate"]
+# microphone capture (cpal, ctrlc): `fluid_speech::mic`
+mic = ["dep:cpal", "dep:ctrlc"]
+# the `fluid-speech` command-line binary (clap, env_logger) and clap's ValueEnum on the option enums
+cli = ["mic", "dep:clap", "dep:env_logger"]
+# the `fluid-dictate` daemon (evdev hotkeys and uinput typing on Linux, event taps on macOS). Disable default
+# features to use the crate as an inference-only library
+dictate = ["cli", "dep:evdev", "dep:core-graphics", "dep:core-foundation"]
+# CUDA engine: fused kernels (nvcc), CUDA graphs, cuBLAS
+cuda = ["candle-core/cuda"]
+mkl = ["candle-core/mkl"]
+
+[dependencies]
+anyhow = "1"
+candle-core = "0.11"
+clap = { version = "4.6", features = ["derive", "env"], optional = true }
+cpal = { version = "0.18.2", optional = true }
+ctrlc = { version = "3.5.2", optional = true }
+env_logger = { version = "0.11.11", optional = true }
+half = "2.7"
+log = "0.4"
+memmap2 = "0.9"
+num_cpus = "1.17"
+rayon = "1.12"
+realfft = "3.5"
+rubato = "5.0.0"
+safetensors = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+symphonia = { version = "0.6.1", features = ["all"] }
+ureq = "2"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-graphics = { version = "0.25", optional = true }
+core-foundation = { version = "0.10", optional = true }
+
+# talk to PipeWire / PulseAudio instead of opening ALSA hardware that the sound server already holds
+[target.'cfg(target_os = "linux")'.dependencies]
+cpal = { version = "0.18.2", features = ["pulseaudio"], optional = true }
+evdev = { version = "0.13", optional = true }
+
+[[bin]]
+name = "fluid-speech"
+path = "src/main.rs"
+required-features = ["cli"]
+
+[[bin]]
+name = "fluid-dictate"
+path = "src/bin/fluid-dictate.rs"
+required-features = ["dictate"]
+
+# `cargo run` without --release: optimise dependencies (candle's CPU kernels are unusably slow at opt-level 0)
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+debug = false
