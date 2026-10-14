@@ -21,6 +21,20 @@ On an RTX 4090 it transcribes an 11 s clip in **5.3 ms** end to end and all of L
 | `src/mic.rs`, `src/dictate/` | Microphone capture + VAD; hotkeys, typing, clipboard and notifications (Linux evdev/uinput, macOS Quartz) |
 | `tests/transcribe.rs` | End-to-end tests (CPU and CUDA, incl. concurrent engines) |
 
+## Install
+
+Release archives for Linux (x86_64, aarch64, and an x86_64 CUDA build) and macOS (Apple Silicon) are on the
+[releases page](https://github.com/apiplant/fluid-speech-rs/releases). They are also packaged:
+
+```sh
+brew install apiplant/tap/fluid-speech-rs            # or fluid-speech-rs-cuda (Linux x86_64)
+sudo apt install fluid-speech-rs                     # apt.apiplant.com; or fluid-speech-rs-cuda
+sudo pacman -S fluid-speech-rs                       # apiplant.github.io/pacman; or fluid-speech-rs-cuda
+cargo install fluid-speech-rs --features cuda        # from crates.io
+```
+
+Repository setup for apt and pacman is in [`packaging/README.md`](packaging/README.md#using-the-packages).
+
 ## Quick start
 
 ```sh
@@ -137,13 +151,22 @@ WantedBy=graphical-session.target
 
 ## Use as a library
 
-Everything beyond inference is behind features: `mic` (cpal, ctrlc: `fluid_speech::mic`), `cli` (the `fluid-speech`
-binary) and `dictate` (the `fluid-dictate` binary; evdev / Quartz). `dictate` implies `cli`, which implies `mic`, and
-the defaults enable `dictate`. For inference only:
+The crate is `fluid-speech-rs` on crates.io (library name `fluid_speech`). Everything beyond inference is behind
+features:
 
-```toml
-fluid-speech = { path = "...", default-features = false }                     # CPU
-# fluid-speech = { path = "...", default-features = false, features = ["cuda"] }
+- `audio`: symphonia + rubato, `fluid_speech::audio` (decode any file, resample to 16 kHz).
+- `download`: ureq, fetch the model from Hugging Face when no directory is given.
+- `mic`: cpal + ctrlc, `fluid_speech::mic` (implies `audio`).
+- `cli`: the `fluid-speech` binary (implies `mic` and `download`).
+- `dictate`: the `fluid-dictate` binary; evdev / Quartz (implies `cli`). This is the default.
+- `cuda`: the CUDA engine (needs `nvcc` at build time).
+
+With `--no-default-features` the library depends only on candle, safetensors, rayon, realfft and serde:
+
+```sh
+cargo add fluid-speech-rs --no-default-features                           # engine only: 16 kHz f32 samples in
+cargo add fluid-speech-rs --no-default-features --features audio,download # + file decoding and model download
+cargo add fluid-speech-rs --no-default-features --features cuda
 ```
 
 ```rust

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>fluid-speech-rs — Fluid Speech Mini speech-to-text in Rust</title>
+    <meta name="description" content="Rust and CUDA speech-to-text for Fluid Speech Mini, FluidVoice's Parakeet TDT 0.6B dictation model, ported from Core ML to safetensors. Transcribe files or the microphone from a CLI, or dictate into any app on Linux and macOS." />
+    <meta name="keywords" content="fluid speech, fluidvoice, speech to text, ASR, parakeet, Rust, candle, CUDA, dictation, transcription, whisper alternative" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://fluid-speech-rs.apiplant.com/" />
+    <meta property="og:site_name" content="fluid-speech-rs" />
+    <meta property="og:title" content="fluid-speech-rs — Fluid Speech Mini speech-to-text in Rust" />
+    <meta property="og:description" content="Rust and CUDA speech-to-text for Fluid Speech Mini, FluidVoice's Parakeet TDT 0.6B dictation model, ported from Core ML to safetensors. Transcribe files or the microphone from a CLI, or dictate into any app on Linux and macOS." />
+    <meta property="og:url" content="https://fluid-speech-rs.apiplant.com/" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="fluid-speech-rs — Fluid Speech Mini speech-to-text in Rust" />
+    <meta name="twitter:description" content="Rust and CUDA speech-to-text for Fluid Speech Mini, FluidVoice's Parakeet TDT 0.6B dictation model, ported from Core ML to safetensors. Transcribe files or the microphone from a CLI, or dictate into any app on Linux and macOS." />
+    <meta name="theme-color" content="#171a21" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f2f5fa" media="(prefers-color-scheme: light)" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "fluid-speech-rs",
+        "description": "Rust and CUDA speech-to-text for Fluid Speech Mini, FluidVoice's Parakeet TDT 0.6B dictation model, ported from Core ML to safetensors. Transcribe files or the microphone from a CLI, or dictate into any app on Linux and macOS.",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Linux, macOS",
+        "url": "https://fluid-speech-rs.apiplant.com/",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      }
+    </script>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2327282f'/%3E%3Cpath d='M7 13v6M12 9v14M17 5v22M22 9v14M27 13v6' stroke='%23a78bfa' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+    <script>
+      // Set the theme before first paint so the page never flashes the wrong one.
+      (function () {
+        try {
+          var stored = localStorage.getItem("fluid-speech-rs-theme");
+          var light =
+            stored === "light" ||
+            (!stored && window.matchMedia("(prefers-color-scheme: light)").matches);
+          if (light) document.documentElement.classList.add("light");
+          document.documentElement.style.colorScheme = light ? "light" : "dark";
+        } catch (_) {
+          /* private mode: dark is the default anyway */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/index.tsx"></script>
+  </body>
+</html>

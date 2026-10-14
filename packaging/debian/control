@@ -1,0 +1,15 @@
+Package: fluid-speech-rs
+Version: @VERSION@
+Section: utils
+Priority: optional
+Architecture: @ARCH@
+Depends: libasound2
+Maintainer: apiplant <releases@apiplant.com>
+Installed-Size: @INSTALLED_SIZE@
+Homepage: https://github.com/apiplant/fluid-speech-rs
+Description: Fluid Speech Mini speech-to-text CLI and dictation daemon (candle)
+ fluid-speech transcribes audio files or the microphone with Fluid Speech
+ Mini (a palettised Parakeet TDT 0.6B), natively on candle. fluid-dictate is
+ a push-to-talk dictation daemon (Linux and macOS). The model (327 MB) is
+ downloaded from Hugging Face on first use into ~/.cache/fluid-speech-rs, or
+ taken from --model.

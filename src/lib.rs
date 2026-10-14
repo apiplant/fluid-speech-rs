@@ -11,10 +11,12 @@
 //! # anyhow::Ok(())
 //! ```
 
+#[cfg(feature = "audio")]
 pub mod audio;
 pub mod config;
 #[cfg(feature = "dictate")]
 pub mod dictate;
+#[cfg(feature = "download")]
 pub mod download;
 #[cfg(feature = "cuda")]
 pub mod gpu_decode;
@@ -87,7 +89,10 @@ pub fn default_model() -> Result<PathBuf> {
     }
     match roots.iter().map(|r| r.join("model")).find(|p| is_model_dir(p)) {
         Some(found) => Ok(found),
+        #[cfg(feature = "download")]
         None => download::download().context("no model found; pass --model or set FLUID_MODEL, or allow the download"),
+        #[cfg(not(feature = "download"))]
+        None => anyhow::bail!("no model found; pass a model directory (built without the `download` feature)"),
     }
 }
 
