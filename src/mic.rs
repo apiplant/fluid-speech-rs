@@ -213,9 +213,12 @@ impl Capture {
             .find_map(|c| c.try_with_sample_rate(default.sample_rate()))
             .unwrap_or(default);
         let rate = supported.sample_rate() as usize;
+        #[allow(unused_mut)] // only adjusted on Linux
         let mut config: cpal::StreamConfig = supported.config();
         // small periods: the sound server otherwise hands audio over in ~1/3 s bursts, and whatever is still in
-        // flight when recording stops would be lost
+        // flight when recording stops would be lost. Linux only: CoreAudio already uses small periods, and forcing
+        // a fixed size there makes the device overrun
+        #[cfg(target_os = "linux")]
         if let cpal::SupportedBufferSize::Range { min, max } = supported.buffer_size() {
             config.buffer_size = cpal::BufferSize::Fixed(((rate / 100) as u32).clamp(*min, *max));
         }
