@@ -25,6 +25,12 @@ pub const DEFAULT_PASTE_KEYS: &str = "ctrl+v";
 pub const PERMISSION_HINT: &str = "cannot read any input device in /dev/input. Add yourself to the `input` group \
     (sudo usermod -aG input $USER, then log in again) or run with --no-hotkey";
 
+/// macOS needs a separate Accessibility consent prompt; Linux has no matching
+/// desktop permission for the virtual keyboard.
+pub fn request_accessibility() -> bool {
+    true
+}
+
 pub fn valid_name(name: &str) -> bool {
     KeyCode::from_str(name).is_ok()
 }

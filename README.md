@@ -126,7 +126,8 @@ Instead of a saved hotkey, you can:
 **macOS**
 
 - The hotkey comes from a Quartz event tap, and text is typed with posted key events, so any character works.
-- Grant **Input Monitoring** and **Accessibility** to the app that runs it.
+- `fluid-dictate setup` asks macOS for its available permissions. macOS still requires you to approve them; it cannot
+  grant them silently. Grant **Input Monitoring**, **Accessibility**, and **Microphone** access to the app that runs it.
 - `cmd` means Command and `alt` means Option; the paste shortcut is `cmd+v`.
 
 **Behaviour**

@@ -949,7 +949,7 @@ dependencies = [
 
 [[package]]
 name = "fluid-speech-rs"
-version = "0.1.0"
+version = "0.1.4"
 dependencies = [
  "anyhow",
  "candle-core",

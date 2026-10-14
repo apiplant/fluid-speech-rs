@@ -1,6 +1,6 @@
 [package]
 name = "fluid-speech-rs"
-version = "0.1.0"
+version = "0.1.4"
 edition = "2021"
 description = "Fluid Speech Mini (Parakeet TDT) speech-to-text and dictation on candle, CPU or CUDA"
 license = "Apache-2.0"
