@@ -6,6 +6,10 @@
 //! **Input Monitoring** (to see the hotkey) and **Accessibility** (to type into other windows).
 
 use anyhow::{Context, Result, bail};
+use core_foundation::boolean::CFBoolean;
+use core_foundation::dictionary::CFDictionary;
+use core_foundation::string::CFString;
+use core_foundation::base::TCFType;
 use core_foundation::runloop::CFRunLoop;
 use core_graphics::event::{
     CGEvent, CGEventFlags, CGEventTap, CGEventTapLocation, CGEventTapOptions, CGEventTapPlacement, CGEventType,
@@ -23,6 +27,21 @@ use super::key::{Key, canonical, is_modifier};
 #[link(name = "ApplicationServices", kind = "framework")]
 unsafe extern "C" {
     fn AXIsProcessTrusted() -> bool;
+    fn AXIsProcessTrustedWithOptions(options: *const std::ffi::c_void) -> bool;
+}
+
+/// Ask macOS to show its Accessibility consent prompt when typing has not yet
+/// been allowed. The user must approve this in System Settings; macOS does not
+/// allow an application to grant itself this permission.
+pub fn request_accessibility() -> bool {
+    if unsafe { AXIsProcessTrusted() } {
+        return true;
+    }
+    let options: CFDictionary<CFString, CFBoolean> = CFDictionary::from_CFType_pairs(&[(
+        CFString::from_static_string("AXTrustedCheckOptionPrompt"),
+        CFBoolean::true_value(),
+    )]);
+    unsafe { AXIsProcessTrustedWithOptions(options.as_concrete_TypeRef().cast()) }
 }
 
 #[link(name = "CoreGraphics", kind = "framework")]

@@ -162,6 +162,12 @@ fn socket_path() -> PathBuf {
 // setup
 
 fn setup(hold: bool) -> Result<()> {
+    if !platform::request_accessibility() {
+        eprintln!(
+            "macOS has requested Accessibility permission. Approve it for the app running fluid-dictate \
+             (usually Terminal or iTerm) in System Settings > Privacy & Security > Accessibility."
+        );
+    }
     let rx = spawn_key_listener()?;
     eprintln!("Press the key or key combination to use for dictation, then release it.");
     eprintln!("Tip: pick something that does nothing else (F9-F12, Pause, Super+<letter> you don't use, a mouse side button):");
@@ -194,6 +200,20 @@ fn setup(hold: bool) -> Result<()> {
     }
     let cfg = Config { keys: chord.iter().map(|k| format!("{k:?}")).collect(), hold };
     let path = save_config(&cfg)?;
+    // Opening an input stream makes macOS show its Microphone consent prompt.
+    // It is deliberately best-effort: a user may decline or defer it and still
+    // want to save the hotkey configuration.
+    #[cfg(target_os = "macos")]
+    match mic::Capture::open(None) {
+        Ok(capture) => {
+            std::thread::sleep(Duration::from_millis(100));
+            drop(capture);
+        }
+        Err(e) => eprintln!(
+            "could not request Microphone access ({e:#}). Allow the app running fluid-dictate \
+             in System Settings > Privacy & Security > Microphone before dictating."
+        ),
+    }
     eprintln!(
         "Saved {} ({}) to {}",
         combo_name(&chord),
@@ -288,11 +308,14 @@ impl Daemon {
         // keep listening briefly: people press stop while finishing the last word
         let samples = rec.capture.finish(Duration::from_millis(250));
         let secs = samples.len() as f32 / rate as f32;
+        eprintln!("recording stopped: {secs:.1}s captured");
         if secs < 0.3 {
+            eprintln!("recording is too short to transcribe");
             self.notifier.show("Too short", "", 1000);
             return Ok(());
         }
         let voiced = mic::voiced_secs(&samples, rate);
+        eprintln!("detected {voiced:.2}s of speech");
         if voiced < mic::MIN_VOICED_SECS {
             eprintln!("{secs:.1}s recorded, {voiced:.2}s of it speech: skipped");
             self.notifier.show("No speech heard", "", 1500);
@@ -435,8 +458,11 @@ fn run(args: RunArgs) -> Result<()> {
                 } else if pressed && !armed && d.down.len() == c.len() && c.iter().all(|x| d.down.contains(x)) {
                     armed = true;
                     if hold { d.start() } else if d.rec.is_some() { d.stop(&rx) } else { d.start() }
-                } else if !pressed && armed && !c.iter().any(|x| d.down.contains(x)) {
-                    // the whole combo is up (not just its first key: Fn keys often report press+release at once)
+                } else if !pressed && armed && (!is_modifier(k) || !c.iter().any(|x| d.down.contains(x))) {
+                    // A non-modifier finishing the chord is enough to re-arm. On macOS, a listen-only event tap
+                    // can miss a modifier's FlagsChanged release while an app consumes a Cmd-based shortcut; waiting
+                    // for every modifier in that case leaves a toggle hotkey armed forever after its first use.
+                    // All-modifier chords still wait until the whole combo is up.
                     armed = false;
                     if hold { d.stop(&rx) } else { Ok(()) }
                 } else {

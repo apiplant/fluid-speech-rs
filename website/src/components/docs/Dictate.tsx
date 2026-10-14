@@ -51,6 +51,11 @@ fluid-dictate                # run the daemon (keep it running: autostart / syst
             <strong class="font-medium text-ink">Accessibility</strong>, to type into other windows. Without it the
             keystrokes are dropped; <IC>--output clipboard</IC> works without it.
           </LI>
+          <LI>
+            <strong class="font-medium text-ink">Microphone</strong>, to record dictation. Setup starts a brief input
+            stream so macOS can ask for this permission. macOS requires you to approve each permission; an app cannot
+            grant them to itself.
+          </LI>
         </UL>
         <P>
           Key names are the same as on Linux: <IC>cmd</IC> or <IC>super</IC> is Command, <IC>alt</IC> or{" "}
