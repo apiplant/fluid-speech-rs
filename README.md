@@ -262,7 +262,17 @@ official ONNX build agree.
 Other measurements:
 
 - **GPU memory**: about 2.1 GB peak for single clips and 3.3 GB for batches of 16 × ~35 s. That is fp16 weights 1.25 GB (expanded at load), CUDA context, workspaces and the positional table.
-- **CPU path** (7950X, 32 threads): RTFx 16 on a single 11 s clip; 328 clips (40 min) in 76 s, against 88 s for the official ONNX build with 16 threads on the same clips.
+- **CPU path** (7950X, 32 threads): RTFx 16 on a single 11 s clip.
+- **Against the official ONNX build** (ONNX Runtime 1.31, its `transcribe.py`, same 328 clips / 40 min):
+
+  | | this engine | ONNX Runtime | speedup |
+  |---|---|---|---|
+  | CPU, 16 threads each, 328 clips | 73.8 s | 83.4 s | 1.13× |
+  | CUDA, 328 clips (wall time incl. load) | 1.30 s | 21.8 s | ~17× |
+  | CUDA, 11 s clip (warm median of 10) | 5.5 ms | 69 ms | ~12.5× |
+
+  The ONNX script runs one clip at a time and keeps the TDT decode loop on the CPU (42 of its 69 ms); its encoder
+  alone takes 22 ms against 3.8 ms here. WER is unchanged on both providers (1.95% vs 1.96%).
 
 ## Things that were tried and dropped
 
