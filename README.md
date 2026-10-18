@@ -35,6 +35,31 @@ cargo install fluid-speech-rs --features cuda        # from crates.io
 
 Repository setup for apt and pacman is in [`packaging/README.md`](packaging/README.md#using-the-packages).
 
+## Models
+
+Models live in `~/.cache/fluid-speech-rs/` (`$XDG_CACHE_HOME/fluid-speech-rs`), in a directory named after the Hugging Face repo: `fluid-speech-mini-safetensors`. The first run downloads it (327 MB) when it is missing.
+
+If you already have the files (from `git lfs`, `hf download` or another machine), skip the download by putting them
+where it looks, or symlink them there:
+
+```sh
+mkdir -p ~/.cache/fluid-speech-rs
+ln -s /path/to/fluid-speech-mini-safetensors ~/.cache/fluid-speech-rs/fluid-speech-mini-safetensors
+```
+
+The directory must contain:
+
+```
+~/.cache/fluid-speech-rs/fluid-speech-mini-safetensors/
+├── config.json
+├── vocab.json
+├── model.safetensors
+├── LICENSE
+└── NOTICE
+```
+
+To use a copy elsewhere without linking, pass `--model DIR` (`FLUID_MODEL`).
+
 ## Quick start
 
 ```sh
