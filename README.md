@@ -42,7 +42,7 @@ Repository setup for apt and pacman is in [`packaging/README.md`](packaging/READ
 cargo build --release --features cuda      # or without --features cuda for CPU only
 # Linux: cpal links ALSA, so the build needs alsa-lib / libasound2-dev
 
-./target/release/fluid-speech samples/jfk.wav
+fluid-speech samples/jfk.wav
 ```
 
 The model is looked for in `--model` / `$FLUID_MODEL`, then `./model`, `../model` and next to the binary. Failing
