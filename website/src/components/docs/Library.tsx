@@ -15,7 +15,7 @@ export function DocsLibrary() {
         <H2>Add the dependency</H2>
         <P>
           Everything beyond inference is behind features: <IC>audio</IC> (symphonia + rubato;{" "}
-          <IC>fluid_speech::audio</IC>), <IC>download</IC> (ureq; fetch the model on first use), <IC>mic</IC> (cpal;{" "}
+          <IC>fluid_speech::audio</IC>), <IC>download</IC> (ureq; fetch Mini or Pro on first use), <IC>mic</IC> (cpal;{" "}
           <IC>fluid_speech::mic</IC>), <IC>cli</IC> (the <IC>fluid-speech</IC> binary) and <IC>dictate</IC> (the{" "}
           <IC>fluid-dictate</IC> binary). The defaults enable <IC>dictate</IC>, which pulls in all of them. With no
           default features the crate depends on candle, safetensors, rayon, realfft and serde only.
@@ -29,7 +29,8 @@ cargo add fluid-speech-rs --no-default-features --features cuda           # CUDA
         <H2>Transcribe a file</H2>
         <Pre caption="src/main.rs" lang="rust">{`use fluid_speech::{audio, text, DeviceArg, Engine, LoadOptions};
 
-// None: ./model, ../model, next to the binary, else downloaded (feature "download")
+// None: local/cached Pro first, then local model directories, then cached/downloaded Mini.
+// Explicit choices: Some("mini".into()), Some("pro".into()), or Some("model/fluid-speech-pro".into()).
 let engine = Engine::open(None, DeviceArg::Auto, &LoadOptions::default())?;
 
 let samples = audio::load("talk.mp3".as_ref())?;   // any symphonia format -> 16 kHz mono (feature "audio")

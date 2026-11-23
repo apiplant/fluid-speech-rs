@@ -58,7 +58,7 @@ export function Footer() {
             </span>
           </div>
           <p class="mt-3 max-w-xs text-sm leading-relaxed text-faint">
-            Fluid Speech Mini speech-to-text in Rust and CUDA: transcribe files or the microphone, or dictate into any window. No Python.
+            Fluid Speech Mini and Pro speech-to-text in Rust and CUDA: transcribe files or the microphone, or dictate into any window. No Python.
           </p>
         </div>
 

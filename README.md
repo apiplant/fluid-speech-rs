@@ -2,9 +2,10 @@
 
 [Fluid Speech Mini](https://huggingface.co/FluidVoice-Labs/fluid-speech-mini-coreml) (FluidVoice's English dictation
 model, a Parakeet TDT 0.6B variant) ported from its Core ML package to **safetensors**, running on a custom
-**Rust + candle** inference engine with hand-written CUDA kernels.
+**Rust + candle** inference engine with hand-written CUDA kernels. The engine also supports the multilingual
+[Fluid Speech Pro Transformers checkpoint](https://huggingface.co/FluidVoice-Labs/fluid-speech-pro).
 
-On an RTX 4090 it transcribes an 11 s clip in **5.3 ms** end to end and all of LibriSpeech test-clean (5.4 h) in
+On an RTX 4090, Mini transcribes an 11 s clip in **5.3 ms** end to end and all of LibriSpeech test-clean (5.4 h) in
 **4.2 s** (4,600× real time; 5,800× with `--fast`). Its transcripts match the official ONNX build.
 
 ## Layout
@@ -37,7 +38,22 @@ Repository setup for apt and pacman is in [`packaging/README.md`](packaging/READ
 
 ## Models
 
-Models live in `~/.cache/fluid-speech-rs/` (`$XDG_CACHE_HOME/fluid-speech-rs`), in a directory named after the Hugging Face repo: `fluid-speech-mini-safetensors`. The first run downloads it (327 MB) when it is missing.
+Models live in `~/.cache/fluid-speech-rs/` (`$XDG_CACHE_HOME/fluid-speech-rs`), in a directory named after the Hugging Face repo. Mini is cached as `fluid-speech-mini-safetensors`; Pro is cached as `fluid-speech-pro`.
+
+Fluid Speech Pro is supported from its upstream Transformers checkpoint. Select it with `--model pro` (the full
+ID `FluidVoice-Labs/fluid-speech-pro` also works); it downloads about 2.5 GB if no local or cached copy is available.
+For a local copy, pass its Hugging Face repo directory, such as `model/fluid-speech-pro/`. The loader reads the
+checkpoint, tokenizer and processor config directly, including folding encoder BatchNorm weights into depthwise
+convolutions. No Python conversion is needed. Mini uses `vocab.json`; Pro uses `tokenizer.json`.
+
+To keep Pro under the project `model/` folder alongside other local models:
+
+```sh
+hf download FluidVoice-Labs/fluid-speech-pro config.json processor_config.json tokenizer.json model.safetensors LICENSE NOTICE --local-dir model/fluid-speech-pro
+```
+
+Choose `--model mini` or `--model pro` to select a model explicitly. With no `--model`, a local or cached Pro takes
+priority, followed by local model directories, then cached Mini or a Mini download.
 
 If you already have the files (from `git lfs`, `hf download` or another machine), skip the download by putting them
 where it looks, or symlink them there:
@@ -68,12 +84,13 @@ cargo build --release --features cuda      # or without --features cuda for CPU 
 # Linux: cpal links ALSA, so the build needs alsa-lib / libasound2-dev
 
 fluid-speech samples/jfk.wav
+fluid-speech samples/jfk.wav --model pro              # choose Pro explicitly
+fluid-speech samples/jfk.wav --model mini             # choose Mini explicitly
+fluid-speech samples/jfk.wav --model model/fluid-speech-pro  # or pass a local model directory
 ```
 
-The model is looked for in `--model` / `$FLUID_MODEL`, then `./model`, `../model` and next to the binary. Failing
-that, it is downloaded once (327 MB) from
-[apiplant/fluid-speech-mini-safetensors](https://huggingface.co/apiplant/fluid-speech-mini-safetensors) into
-`~/.cache/fluid-speech-rs/` (`$XDG_CACHE_HOME`). To build it from the Core ML package instead:
+With no `--model`, cached or local Pro is preferred, then local model directories, then cached Mini or a Mini download.
+To build Mini from the Core ML package instead:
 
 ```sh
 hf download FluidVoice-Labs/fluid-speech-mini-coreml --local-dir hf_coreml
@@ -99,6 +116,9 @@ resampled to 16 kHz.
 
 **Options**
 
+- `--model mini|pro|DIR`: select Mini, Pro, or a local model directory. Mini and Pro download if missing. The full
+  Hugging Face ID `FluidVoice-Labs/fluid-speech-pro` is also accepted. With no `--model`, local/cached Pro takes
+  priority, then a local model, then cached/downloaded Mini.
 - `--device auto|cpu|cuda`.
 - `--max-pass 40`: clips up to 40 s go through the encoder in one pass. Longer audio is cut at quiet points into pieces of about 30 s; all pieces and files are batched together.
 - `--batch-size 16`.
@@ -133,7 +153,10 @@ cargo install --path . --features cuda     # puts fluid-speech and fluid-dictate
 fluid-dictate setup                        # press your combo twice; saved to ~/.config/fluid-speech/dictate.json
 fluid-dictate setup --hold                 # same, but push-to-talk (record while held)
 fluid-dictate                              # run the daemon (keep it running: autostart / systemd user unit)
+fluid-dictate --model pro                  # select Pro; use --model mini for Mini
 ```
+
+`fluid-dictate` accepts the same `--model` choices and default model resolution as `fluid-speech`.
 
 Instead of a saved hotkey, you can:
 
@@ -198,7 +221,8 @@ cargo add fluid-speech-rs --no-default-features --features cuda
 ```rust
 use fluid_speech::{audio, text, DeviceArg, Engine, LoadOptions};
 
-let engine = Engine::open(None, DeviceArg::Auto, &LoadOptions::default())?; // finds or downloads the model
+let engine = Engine::open(None, DeviceArg::Auto, &LoadOptions::default())?; // default model selection
+// Or choose explicitly: Some("mini".into()), Some("pro".into()), or Some("model/fluid-speech-pro".into())
 let samples = audio::load("talk.wav".as_ref())?;      // any symphonia format -> 16 kHz mono f32
 let t = engine.transcribe(&samples)?;                 // long audio is cut at pauses and batched
 println!("{}", t.text);                               // t.words: word, start, end, confidence
@@ -316,5 +340,6 @@ python tools/prep_librispeech.py      # LibriSpeech test-clean manifest for --ma
 
 ## License and attribution
 
-The engine code is MIT OR Apache-2.0. The model is CC BY 4.0: **Fluid Speech Mini by FluidVoice**, built on NVIDIA
-Parakeet TDT 0.6B v3 and Moondream Parakeet Ultra. The exporter copies the model's LICENSE and NOTICE into `model/`.
+The engine code is MIT OR Apache-2.0. Both **Fluid Speech Mini** and **Fluid Speech Pro** are CC BY 4.0 by FluidVoice.
+Mini is built on NVIDIA Parakeet TDT 0.6B v3 and Moondream Parakeet Ultra. The model packages include their
+respective LICENSE and NOTICE files.

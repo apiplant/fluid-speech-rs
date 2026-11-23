@@ -35,6 +35,16 @@ fluid-dictate                # run the daemon (keep it running: autostart / syst
       </Section>
 
       <Section>
+        <H2>Choose a model</H2>
+        <P>
+          Use <IC>--model mini</IC> or <IC>--model pro</IC> to choose explicitly. Each uses a local or cached copy and
+          downloads it if missing. A local model directory and the Pro Hub ID <IC>FluidVoice-Labs/fluid-speech-pro</IC>
+          also work. With no selection, local or cached Pro is preferred; Mini is the fallback after local models.
+        </P>
+        <CopyBlock command="fluid-dictate --model pro" />
+      </Section>
+
+      <Section>
         <H2>macOS</H2>
         <P>
           The hotkey comes from a Quartz event tap and the text is typed with posted key events, so macOS asks for two

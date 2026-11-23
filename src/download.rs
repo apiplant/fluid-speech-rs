@@ -14,6 +14,9 @@ use anyhow::{Context, Result, bail};
 pub const HF_REPO: &str = "apiplant/fluid-speech-mini-safetensors";
 /// Files the engine needs (model.safetensors is about 327 MB).
 pub const FILES: &[&str] = &["config.json", "vocab.json", "model.safetensors", "LICENSE", "NOTICE"];
+/// Transformers checkpoint for the multilingual Fluid Speech Pro model.
+pub const PRO_REPO: &str = "FluidVoice-Labs/fluid-speech-pro";
+const PRO_FILES: &[&str] = &["config.json", "processor_config.json", "tokenizer.json", "model.safetensors", "LICENSE", "NOTICE"];
 
 /// `$XDG_CACHE_HOME/fluid-speech-rs`, defaulting to `~/.cache/fluid-speech-rs`.
 pub fn cache_dir() -> Option<PathBuf> {
@@ -27,6 +30,11 @@ pub fn cache_dir() -> Option<PathBuf> {
 /// Where [`download`] puts (or would put) the model directory.
 pub fn model_dir() -> Option<PathBuf> {
     Some(cache_dir()?.join(HF_REPO.rsplit('/').next().unwrap_or(HF_REPO)))
+}
+
+/// Where [`download_pro`] puts (or would put) the upstream Transformers checkpoint.
+pub fn pro_model_dir() -> Option<PathBuf> {
+    Some(cache_dir()?.join("fluid-speech-pro"))
 }
 
 fn fetch_to_file(url: &str, dest: &Path) -> Result<()> {
@@ -85,6 +93,20 @@ pub fn download() -> Result<PathBuf> {
     eprintln!("Downloading {HF_REPO} (about 327 MB) from https://huggingface.co/{HF_REPO} into {}", dir.display());
     for f in missing {
         fetch_to_file(&format!("https://huggingface.co/{HF_REPO}/resolve/main/{f}"), &dir.join(f))?;
+    }
+    Ok(dir)
+}
+
+/// Downloads Fluid Speech Pro's upstream Transformers checkpoint into the shared model cache.
+pub fn download_pro() -> Result<PathBuf> {
+    let dir = pro_model_dir().context("no cache directory available (set $HOME or $XDG_CACHE_HOME)")?;
+    let missing: Vec<&str> = PRO_FILES.iter().copied().filter(|f| !dir.join(f).is_file()).collect();
+    if missing.is_empty() {
+        return Ok(dir);
+    }
+    eprintln!("Downloading {PRO_REPO} (about 2.5 GB) from Hugging Face into {}", dir.display());
+    for f in missing {
+        fetch_to_file(&format!("https://huggingface.co/{PRO_REPO}/resolve/main/{f}"), &dir.join(f))?;
     }
     Ok(dir)
 }

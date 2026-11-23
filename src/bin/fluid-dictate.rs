@@ -19,7 +19,7 @@ use std::path::PathBuf;
 use std::sync::mpsc::{Receiver, Sender, channel};
 use std::time::{Duration, Instant};
 
-/// Dictation with Fluid Speech Mini: press a hotkey, speak, press it again; the text is typed where your cursor is.
+/// Dictation with Fluid Speech Mini or Pro: press a hotkey, speak, press it again; text is typed where your cursor is.
 #[derive(Parser)]
 #[command(name = "fluid-dictate", version)]
 struct Cli {
@@ -92,8 +92,8 @@ struct RunArgs {
     #[arg(long, default_value_t = 300.0)]
     max_secs: f32,
 
-    /// Model directory (model.safetensors, config.json, vocab.json). Default: ./model, ../model, next to the
-    /// binary, else downloaded from Hugging Face into ~/.cache/fluid-speech-rs on first use
+    /// Model: `mini`, `pro`, a local directory, or `FluidVoice-Labs/fluid-speech-pro`.
+    /// Explicit choices use local/cache copies and download if missing. Default: local Pro, cached Pro, local model directories, then Mini.
     #[arg(short, long, env = "FLUID_MODEL")]
     model: Option<PathBuf>,
 

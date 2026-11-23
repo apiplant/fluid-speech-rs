@@ -14,7 +14,7 @@ enum Format {
     Srt,
 }
 
-/// Transcribe English speech with Fluid Speech Mini (Parakeet TDT 0.6B) on CPU or CUDA.
+/// Transcribe speech with Fluid Speech Mini or multilingual Fluid Speech Pro on CPU or CUDA.
 #[derive(Parser, Debug)]
 #[command(name = "fluid-speech", version)]
 struct Args {
@@ -48,9 +48,9 @@ struct Args {
     #[arg(long, default_value_t = 0.0)]
     min_confidence: f32,
 
-    /// Model directory (model.safetensors, config.json, vocab.json). Default: ./model, ../model, next to the
-    /// binary, else downloaded from Hugging Face into ~/.cache/fluid-speech-rs on first use
-    #[arg(short, long, env = "FLUID_MODEL")]
+    /// Model: `mini`, `pro`, a local directory, or `FluidVoice-Labs/fluid-speech-pro`.
+    /// Explicit choices use local/cache copies and download if missing. Default: local Pro, cached Pro, local model directories, then Mini.
+    #[arg(short, long, env = "FLUID_MODEL", value_name = "MODEL")]
     model: Option<PathBuf>,
 
     #[arg(short, long, value_enum, default_value_t = DeviceArg::Auto)]

@@ -1,9 +1,9 @@
-//! Fluid Speech Mini (Parakeet TDT 0.6B architecture) inference on candle, plus the audio, microphone (`mic`
+//! Fluid Speech Mini and Fluid Speech Pro (Parakeet TDT) inference on candle, plus the audio, microphone (`mic`
 //! feature) and dictation (`dictate` feature) utilities shared by the `fluid-speech` and `fluid-dictate` binaries.
 //!
 //! ```no_run
 //! use fluid_speech::{audio, DeviceArg, Engine, LoadOptions};
-//! // `None`: ./model, ../model, next to the binary, or downloaded from Hugging Face into ~/.cache on first use
+//! // `None`: cached Pro, a local model/ directory, then cached or downloaded Mini
 //! let engine = Engine::open(None, DeviceArg::Auto, &LoadOptions::default())?;
 //! let wav = audio::load("clip.wav".as_ref())?; // any format symphonia decodes -> 16 kHz mono
 //! let t = engine.transcribe(&wav)?;
@@ -76,24 +76,85 @@ pub fn init_threads(threads: Option<usize>) -> usize {
 }
 
 fn is_model_dir(p: &Path) -> bool {
-    p.join("model.safetensors").is_file() && p.join("config.json").is_file() && p.join("vocab.json").is_file()
+    p.join("model.safetensors").is_file()
+        && p.join("config.json").is_file()
+        && (p.join("vocab.json").is_file() || p.join("tokenizer.json").is_file())
 }
 
-/// The model to use when none is given: `./model` or `../model`, a `model` dir next to the binary (or up to three
-/// levels above it, i.e. the repo root for `target/release/...`), else the Hugging Face copy in the cache
-/// directory, downloaded on first use.
-pub fn default_model() -> Result<PathBuf> {
+fn is_mini_model_dir(p: &Path) -> bool {
+    p.join("model.safetensors").is_file()
+        && p.join("config.json").is_file()
+        && p.join("vocab.json").is_file()
+}
+
+fn model_roots() -> Vec<PathBuf> {
     let mut roots = vec![PathBuf::from("."), PathBuf::from("..")];
     if let Some(dir) = std::env::current_exe().ok().and_then(|p| p.parent().map(|p| p.to_path_buf())) {
         roots.extend(dir.ancestors().take(4).map(|p| p.to_path_buf()));
     }
-    match roots.iter().map(|r| r.join("model")).find(|p| is_model_dir(p)) {
-        Some(found) => Ok(found),
-        #[cfg(feature = "download")]
-        None => download::download().context("no model found; pass --model or set FLUID_MODEL, or allow the download"),
-        #[cfg(not(feature = "download"))]
-        None => anyhow::bail!("no model found; pass a model directory (built without the `download` feature)"),
+    roots
+}
+
+fn local_pro_model(roots: &[PathBuf]) -> Option<PathBuf> {
+    roots.iter()
+        .flat_map(|r| [r.join("model").join("fluid-speech-pro"), r.join("model")])
+        .find(|p| is_model_dir(p) && p.join("tokenizer.json").is_file())
+}
+
+fn local_mini_model(roots: &[PathBuf]) -> Option<PathBuf> {
+    roots.iter().map(|r| r.join("model")).find(|p| is_mini_model_dir(p))
+}
+
+fn select_pro_model() -> Result<PathBuf> {
+    if let Some(pro) = local_pro_model(&model_roots()) {
+        return Ok(pro);
     }
+    #[cfg(feature = "download")]
+    {
+        return download::download_pro();
+    }
+    #[cfg(not(feature = "download"))]
+    anyhow::bail!("Pro is not installed locally; pass its directory or build with the `download` feature")
+}
+
+fn select_mini_model() -> Result<PathBuf> {
+    if let Some(mini) = local_mini_model(&model_roots()) {
+        return Ok(mini);
+    }
+    #[cfg(feature = "download")]
+    {
+        return download::download();
+    }
+    #[cfg(not(feature = "download"))]
+    anyhow::bail!("Mini is not installed locally; pass its directory or build with the `download` feature")
+}
+
+/// The model to use when none is given: local or cached Fluid Speech Pro if available, then `./model` or `../model`,
+/// a `model` dir next to the binary (or up to three levels above it), then cached or downloaded Fluid Speech Mini.
+pub fn default_model() -> Result<PathBuf> {
+    let roots = model_roots();
+    if let Some(pro) = local_pro_model(&roots) {
+        return Ok(pro);
+    }
+
+    #[cfg(feature = "download")]
+    if let Some(pro) = download::pro_model_dir().filter(|p| is_model_dir(p)) {
+        return Ok(pro);
+    }
+
+    if let Some(found) = roots.iter().map(|r| r.join("model")).find(|p| is_model_dir(p)) {
+        return Ok(found);
+    }
+
+    #[cfg(feature = "download")]
+    {
+        if let Some(mini) = download::model_dir().filter(|p| is_model_dir(p)) {
+            return Ok(mini);
+        }
+        return download::download().context("no model found; pass --model or set FLUID_MODEL, or allow the download");
+    }
+    #[cfg(not(feature = "download"))]
+    anyhow::bail!("no model found; pass a model directory (built without the `download` feature)")
 }
 
 /// Engine construction options.
@@ -150,11 +211,13 @@ impl Engine {
         Self::load_with(dir, device, &LoadOptions::default())
     }
 
-    /// Load `model` (a directory with model.safetensors, config.json, vocab.json; `None` = [`default_model`]) on
-    /// the chosen device.
+    /// Load `mini`, `pro`, a local directory, or the Pro Hugging Face ID; `None` selects [`default_model`].
     pub fn open(model: Option<PathBuf>, device: DeviceArg, opts: &LoadOptions) -> Result<Self> {
         let dir = match model {
             Some(p) if p.is_file() => p.parent().map(Path::to_path_buf).unwrap_or_default(),
+            Some(p) if p.is_dir() => p,
+            Some(p) if p == Path::new("mini") => select_mini_model()?,
+            Some(p) if p == Path::new("pro") || p == Path::new("FluidVoice-Labs/fluid-speech-pro") => select_pro_model()?,
             Some(p) => p,
             None => default_model()?,
         };

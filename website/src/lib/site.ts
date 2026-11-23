@@ -17,9 +17,9 @@ export const SITE = {
   hasCuda: true,
   bins: ["fluid-speech", "fluid-dictate"],
   badges: ["Rust", "candle", "CUDA", "Apache-2.0"],
-  hero: { pre: "Fluid Speech Mini, ", accent: "in Rust", post: "." },
-  lead: "Transcribe files or the microphone, or dictate into any window on Linux or macOS. FluidVoice's Parakeet TDT dictation model, ported from Core ML to a 327 MB safetensors file and run by a custom candle + CUDA engine. No Python, no server.",
-  heroNote: "An 11 s clip in 5.3 ms on an RTX 4090; LibriSpeech test-clean at 4,600x real time and 2.07 % WER.",
+  hero: { pre: "Fluid Speech Mini + Pro, ", accent: "in Rust", post: "." },
+  lead: "Transcribe files or the microphone, or dictate into any window on Linux or macOS. Choose compact English Mini or multilingual Pro. A custom candle + CUDA engine; no Python, no server.",
+  heroNote: "Mini: an 11 s clip in 5.3 ms on an RTX 4090; LibriSpeech test-clean at 4,600x real time and 2.07 % WER.",
   demo: undefined as { href: string; label: string } | undefined,
   cargo: `cargo install fluid-speech-rs
 cargo install fluid-speech-rs --features cuda   # with the CUDA engine (needs nvcc)`,
@@ -49,21 +49,25 @@ cargo install fluid-speech-rs --features cuda   # with the CUDA engine (needs nv
       name: "fluid-speech",
       href: "/docs/cli",
       tagline: "Files and microphone to text",
-      body: "Any format symphonia decodes (wav, flac, mp3, ogg, m4a). Plain text, word-timed JSON or SRT subtitles. Batch manifests, and a live microphone mode with an energy VAD.",
+      body: "Any format symphonia decodes (wav, flac, mp3, ogg, m4a). Choose Mini or Pro with --model mini|pro. Plain text, word-timed JSON or SRT subtitles, batch manifests, and live microphone mode.",
     },
     {
       name: "fluid-dictate",
       href: "/docs/dictate",
       tagline: "Press a key, speak, text appears",
-      body: "A daemon for Linux (Wayland or X11) and macOS that keeps the model on the GPU and types the transcript into the focused window, 10 to 25 ms after you stop. Toggle or push-to-talk hotkeys.",
+      body: "A daemon for Linux (Wayland or X11) and macOS that keeps the model on the GPU and types the transcript into the focused window, 10 to 25 ms after you stop. Choose the model with --model mini|pro; use toggle or push-to-talk hotkeys.",
     },
   ] as Card[],
-  featuresTitle: "A Core ML model, everywhere else",
-  featuresLead: "Fluid Speech Mini shipped only as a Core ML package. The port reads its compiled program directly and keeps its quantisation.",
+  featuresTitle: "Two models, one engine",
+  featuresLead: "Choose compact Mini or multilingual Pro. Mini keeps the original Core ML quantisation; Pro loads directly from FluidVoice's Transformers checkpoint.",
   features: [
     {
+      title: "Multilingual Fluid Speech Pro",
+      body: "Select it with --model pro. Its 2.5 GB Transformers checkpoint loads directly. A local or cached Pro is the default when available; otherwise Mini is used.",
+    },
+    {
       title: "327 MB, original quantisation",
-      body: "2/3/4-bit palettized encoder linears and int8 elsewhere, stored as-is and expanded to fp16 in 0.1 s at load, bit-identical to a dense export.",
+      body: "Choose with --model mini. 2/3/4-bit palettized encoder linears and int8 elsewhere, stored as-is and expanded to fp16 in 0.1 s at load, bit-identical to a dense export.",
     },
     {
       title: "Accurate",

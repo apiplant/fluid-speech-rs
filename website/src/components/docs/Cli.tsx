@@ -14,7 +14,10 @@ export function DocsCli() {
       <Section>
         <H2>Examples</H2>
         <CopyBlock
-          command={`fluid-speech recording.wav                         # CUDA if built with it and a GPU is present, else CPU
+          command={`fluid-speech recording.wav                         # default model selection
+fluid-speech recording.wav --model mini            # choose Mini
+fluid-speech recording.wav --model pro             # choose Pro; downloads if missing
+fluid-speech recording.wav --model model/fluid-speech-pro  # local model directory
 fluid-speech talk.mp3 --device cpu --format srt > talk.srt
 fluid-speech a.flac b.m4a --format json            # words with start/end times and confidence
 fluid-speech hour.flac --bench                     # timings + real-time factor on stderr
@@ -30,7 +33,7 @@ fluid-speech --mic --mic-device wave --format json # one JSON line per utterance
         <H2>Options</H2>
         <FlagTable
           rows={[
-            { flag: "-m, --model DIR", meaning: <>A directory with <IC>model.safetensors</IC>, <IC>config.json</IC> and <IC>vocab.json</IC>. Also <IC>FLUID_MODEL</IC>. Default: found or downloaded.</> },
+            { flag: "-m, --model MODEL", meaning: <><IC>mini</IC> selects Mini; <IC>pro</IC> selects Pro. Each uses a local or cached copy and downloads if missing. You can pass a local model directory or the Pro Hub ID <IC>FluidVoice-Labs/fluid-speech-pro</IC>. <IC>FLUID_MODEL</IC> sets the same option. With no selection, local/cached Pro takes priority, then local model directories, then cached/downloaded Mini.</> },
             { flag: "-d, --device auto|cpu|cuda", meaning: "Where to run. auto picks CUDA when the build has it and a GPU is present." },
             { flag: "-f, --format text|json|srt", meaning: "Output format. json carries words with start/end times and confidences." },
             { flag: "--max-pass 40", meaning: "Clips up to this many seconds are encoded in one pass; longer audio is cut at quiet points into ~30 s pieces. In --mic mode, the longest single utterance." },
